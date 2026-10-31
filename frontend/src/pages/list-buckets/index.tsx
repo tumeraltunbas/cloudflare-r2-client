@@ -6,7 +6,10 @@ import { Loading } from "../../components/loading";
 import { Button } from "../../components/ui/button";
 import { Modal, TextField } from "../../components/ui/modal";
 import { DataTable, type Column } from "../../components/ui/table";
-import { useCreateBucket } from "../../services/mutations/bucket.mutation";
+import {
+	useCreateBucket,
+	useDeleteBucket,
+} from "../../services/mutations/bucket.mutation";
 import { bucketsQueryOptions } from "../../services/loaders/buckets.loader";
 
 export interface DataType {
@@ -43,6 +46,8 @@ const columns: Column<DataType>[] = [
 export const ListBuckets = () => {
 	const [isCreateBucketModalOpen, setIsCreateBucketModalOpen] =
 		React.useState<boolean>(false);
+	const [isDeleteBucketModalOpen, setIsDeleteBucketModalOpen] =
+		React.useState<boolean>(false);
 	const [newBucketName, setNewBucketName] = React.useState<string>();
 	const [selectedBucketName, setSelectedBucketName] = React.useState<
 		string | null
@@ -54,14 +59,30 @@ export const ListBuckets = () => {
 		reset: resetCreateBucket,
 	} = useCreateBucket();
 
+	const {
+		mutate: deleteBucket,
+		isPending: isDeleting,
+		reset: resetDeleteBucket,
+	} = useDeleteBucket();
+
 	const showCreateBucketModal = () => {
 		setIsCreateBucketModalOpen(true);
+	};
+
+	const showDeleteBucketModal = () => {
+		setIsDeleteBucketModalOpen(true);
 	};
 
 	const hideCreateBucketModal = () => {
 		setNewBucketName("");
 		setIsCreateBucketModalOpen(false);
 		resetCreateBucket();
+	};
+
+	const hideDeleteBucketModal = () => {
+		setSelectedBucketName(null);
+		setIsDeleteBucketModalOpen(false);
+		resetDeleteBucket();
 	};
 
 	const handleCreateBucketModalSubmit = () => {
@@ -75,6 +96,22 @@ export const ListBuckets = () => {
 				onSuccess: () => {
 					setNewBucketName("");
 					setIsCreateBucketModalOpen(false);
+				},
+			}
+		);
+	};
+
+	const handleDeleteBucketModalSubmit = () => {
+		if (!selectedBucketName) {
+			return;
+		}
+
+		deleteBucket(
+			{ bucketName: selectedBucketName },
+			{
+				onSuccess: () => {
+					setSelectedBucketName(null);
+					setIsDeleteBucketModalOpen(false);
 				},
 			}
 		);
@@ -118,7 +155,10 @@ export const ListBuckets = () => {
 
 				<div className="flex items-center gap-2">
 					{selectedBucketName && (
-						<Button variant="danger" onClick={() => undefined}>
+						<Button
+							variant="danger"
+							onClick={() => showDeleteBucketModal()}
+						>
 							Delete Bucket
 						</Button>
 					)}
@@ -159,6 +199,17 @@ export const ListBuckets = () => {
 					onChange={(e) => handleNewBucketNameChange(e)}
 				/>
 			</Modal>
+
+			<Modal
+				open={isDeleteBucketModalOpen}
+				title="Delete Bucket"
+				description="Are you sure to delete bucket? This action cannot be undone."
+				confirmLabel="Delete Bucket"
+				onConfirm={handleDeleteBucketModalSubmit}
+				onClose={hideDeleteBucketModal}
+				isConfirming={isDeleting}
+				confirmVariant="danger"
+			></Modal>
 		</div>
 	);
 };
