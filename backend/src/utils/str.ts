@@ -5,3 +5,7 @@ export function buildCloudflareRequestUrl(
 ): string {
     return `${apiUrl}/${version}/${endpoint}`;
 }
+
+export function generateBearerToken(apiKey: string): string {
+    return `Bearer ${apiKey}`;
+}

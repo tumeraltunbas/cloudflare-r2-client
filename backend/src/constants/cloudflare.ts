@@ -29,6 +29,15 @@ export const CLOUDFLARE_R2_ENDPOINTS = {
             endpoint: (accountId: string, bucketName: string): string =>
                 `accounts/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucketName)}/objects`,
         },
+        get: {
+            method: HTTP_METHODS.GET,
+            endpoint: (
+                accountId: string,
+                bucketName: string,
+                objectKey: string,
+            ): string =>
+                `accounts/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucketName)}/objects/${encodeURIComponent(objectKey)}`,
+        },
         delete: {
             method: HTTP_METHODS.DELETE,
             endpoint: (

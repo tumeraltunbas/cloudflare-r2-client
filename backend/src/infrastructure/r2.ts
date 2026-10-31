@@ -1,6 +1,6 @@
 import configuration from '../configuration/configuration';
 import { CONTENT_TYPES, HTTP_HEADERS, HTTP_METHODS } from '../constants/enums';
-import { buildCloudflareRequestUrl } from '../utils/str';
+import { buildCloudflareRequestUrl, generateBearerToken } from '../utils/str';
 
 interface CloudflareFetchOptions extends RequestInit {
     duplex?: string;
@@ -12,13 +12,14 @@ export class R2Client {
         method: HTTP_METHODS,
         body?: unknown,
         contentType?: CONTENT_TYPES,
+        responseType: 'json' | 'response' = 'json',
     ): Promise<T> {
         const { apiUrl, apiVersion, apiToken } = configuration().cloudflare;
 
         const fetchOptions: CloudflareFetchOptions = {
             method,
             headers: {
-                [HTTP_HEADERS.AUTHORIZATION]: `Bearer ${apiToken}`,
+                [HTTP_HEADERS.AUTHORIZATION]: generateBearerToken(apiToken),
                 [HTTP_HEADERS.CONTENT_TYPE]:
                     contentType ?? CONTENT_TYPES.APPLICATION_JSON,
             },
@@ -38,6 +39,12 @@ export class R2Client {
         const url = buildCloudflareRequestUrl(apiUrl, apiVersion, endpoint);
 
         const response = await fetch(url, fetchOptions);
-        return await response.json();
+
+        if (responseType === 'response') {
+            return response as T;
+        }
+
+        const jsonResponse = await response.json();
+        return jsonResponse;
     }
 }

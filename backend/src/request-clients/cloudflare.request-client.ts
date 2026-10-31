@@ -2,7 +2,7 @@ import configuration, {
     CloudflareConfig,
 } from '../configuration/configuration';
 import { CLOUDFLARE_R2_ENDPOINTS } from '../constants/cloudflare';
-import { CONTENT_TYPES, HTTP_HEADERS, HTTP_METHODS } from '../constants/enums';
+import { CONTENT_TYPES, HTTP_HEADERS } from '../constants/enums';
 import { R2Client } from '../infrastructure/r2';
 import {
     CreateBucketRequest,
@@ -114,8 +114,6 @@ export class CloudflareRequestClient {
             ),
         );
 
-        console.log('deleteObjects - endpoints:', endpoints);
-
         const responses: R2Response<DeleteObjectResponse>[] = await Promise.all(
             endpoints.map((endpoint) =>
                 this.r2Client.request<R2Response<DeleteObjectResponse>>(
@@ -167,17 +165,20 @@ export class CloudflareRequestClient {
         bucketName: string,
         objectKey: string,
     ): Promise<GetObjectResponse> {
-        const workerBaseUrl = this.cloudflareConfig.workerBaseUrl;
-        const url = new URL(workerBaseUrl);
-        url.searchParams.append('bucketName', bucketName);
-        url.searchParams.append('objectKey', objectKey);
+        const getObjectInfo = CLOUDFLARE_R2_ENDPOINTS.object.get;
+        const endpoint = getObjectInfo.endpoint(
+            this.cloudflareConfig.accountId,
+            bucketName,
+            objectKey,
+        );
 
-        const response: Response = await fetch(url.toString(), {
-            method: HTTP_METHODS.GET,
-            headers: {
-                [HTTP_HEADERS.X_API_KEY]: this.cloudflareConfig.workerApiKey,
-            },
-        });
+        const response = await this.r2Client.request<Response>(
+            endpoint,
+            getObjectInfo.method,
+            undefined,
+            undefined,
+            'response',
+        );
 
         if (!response.ok) {
             const errorResponse = await response.json();
