@@ -1,10 +1,13 @@
 import React from "react";
-import { Link, useLoaderData, useNavigation } from "react-router";
+import { Link } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 import { formatDate } from "../../utils/time";
 import { Loading } from "../../components/loading";
 import { Button } from "../../components/ui/button";
 import { Modal, TextField } from "../../components/ui/modal";
 import { DataTable, type Column } from "../../components/ui/table";
+import { useCreateBucket } from "../../services/mutations/bucket.mutation";
+import { bucketsQueryOptions } from "../../services/loaders/buckets.loader";
 
 export interface DataType {
 	name: string;
@@ -38,15 +41,18 @@ const columns: Column<DataType>[] = [
 ];
 
 export const ListBuckets = () => {
-	const navigation = useNavigation();
-	const isLoading = navigation.state === "loading";
-
 	const [isCreateBucketModalOpen, setIsCreateBucketModalOpen] =
 		React.useState<boolean>(false);
 	const [newBucketName, setNewBucketName] = React.useState<string>();
 	const [selectedBucketName, setSelectedBucketName] = React.useState<
 		string | null
 	>();
+
+	const {
+		mutate: createBucket,
+		isPending: isCreating,
+		reset: resetCreateBucket,
+	} = useCreateBucket();
 
 	const showCreateBucketModal = () => {
 		setIsCreateBucketModalOpen(true);
@@ -55,12 +61,23 @@ export const ListBuckets = () => {
 	const hideCreateBucketModal = () => {
 		setNewBucketName("");
 		setIsCreateBucketModalOpen(false);
+		resetCreateBucket();
 	};
 
 	const handleCreateBucketModalSubmit = () => {
-		//TODO: Make API request and invalidate list buckets then.
-		setNewBucketName("");
-		setIsCreateBucketModalOpen(false);
+		if (!newBucketName) {
+			return;
+		}
+
+		createBucket(
+			{ bucketName: newBucketName },
+			{
+				onSuccess: () => {
+					setNewBucketName("");
+					setIsCreateBucketModalOpen(false);
+				},
+			}
+		);
 	};
 
 	const handleNewBucketNameChange = (
@@ -78,9 +95,10 @@ export const ListBuckets = () => {
 		setSelectedBucketName(selectedKey as string);
 	};
 
-	const { buckets } = useLoaderData();
+	const { data, isPending } = useQuery(bucketsQueryOptions());
+	const buckets = data?.buckets ?? [];
 
-	if (isLoading) {
+	if (isPending) {
 		return <Loading />;
 	}
 
@@ -132,6 +150,7 @@ export const ListBuckets = () => {
 				confirmLabel="Create Bucket"
 				onConfirm={handleCreateBucketModalSubmit}
 				onClose={hideCreateBucketModal}
+				isConfirming={isCreating}
 			>
 				<TextField
 					label="Bucket Name"
