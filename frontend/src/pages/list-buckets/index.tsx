@@ -1,29 +1,37 @@
-import { LoadingOutlined } from "@ant-design/icons";
-import { Button, Input, Modal, Spin, Table } from "antd";
-import type { ColumnsType } from "antd/es/table/interface";
 import React from "react";
 import { Link, useLoaderData, useNavigation } from "react-router";
 import { formatDate } from "../../utils/time";
+import { Loading } from "../../components/loading";
+import { Button } from "../../components/ui/button";
+import { Modal, TextField } from "../../components/ui/modal";
+import { DataTable, type Column } from "../../components/ui/table";
 
 export interface DataType {
 	name: string;
 	creationDate: string;
 }
 
-const columns: ColumnsType<DataType> = [
+const columns: Column<DataType>[] = [
 	{
 		title: "Name",
 		dataIndex: "name",
 		key: "name",
-		render: (text: string) => (
-			<Link to={`/buckets/${text}/objects`}>{text}</Link>
+		render: (record) => (
+			<Link
+				to={`/buckets/${record.name}/objects`}
+				className="font-medium text-cloudflare-orange-text underline-offset-4 hover:underline"
+			>
+				{record.name}
+			</Link>
 		),
 	},
 	{
 		title: "Creation Date",
 		dataIndex: "creationDate",
 		key: "creationDate",
-		render: (dateString: string) => formatDate(dateString),
+		render: (record) => (
+			<span className="text-ink-500">{formatDate(record.creationDate)}</span>
+		),
 	},
 ];
 
@@ -65,40 +73,31 @@ export const ListBuckets = () => {
 	const { buckets } = useLoaderData();
 
 	if (isLoading) {
-		return (
-			<div className="flex h-screen">
-				<Spin
-					indicator={<LoadingOutlined spin />}
-					size="large"
-					style={{ color: "white" }}
-					className="m-auto"
-				/>
-			</div>
-		);
+		return <Loading />;
 	}
 
 	return (
-		<div>
-			<div className="flex justify-between">
-				<h1 className="text-white text-2xl font-bold mb-4">
-					R2 Buckets
-				</h1>
+		<div className="space-y-6">
+			<div className="flex flex-wrap items-end justify-between gap-4">
+				<div>
+					<h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+						R2 Buckets
+					</h1>
+					<p className="mt-1 text-sm text-ink-500">
+						{buckets.length} {buckets.length === 1 ? "bucket" : "buckets"} in
+						this account.
+					</p>
+				</div>
 
-				<div className="flex gap-2">
+				<div className="flex items-center gap-2">
 					{isDeleteBucketButtonVisible && (
-						<Button
-							variant="solid"
-							color="danger"
-							className="mb-4"
-							onClick={() => undefined}
-						>
+						<Button variant="danger" onClick={() => undefined}>
 							Delete Bucket
 						</Button>
 					)}
 
 					<Button
-						variant="solid"
-						className="mb-4"
+						variant="primary"
 						onClick={() => showCreateBucketModal()}
 					>
 						Create New Bucket
@@ -106,24 +105,27 @@ export const ListBuckets = () => {
 				</div>
 			</div>
 
-			<Table<DataType>
+			<DataTable<DataType>
 				columns={columns}
 				dataSource={buckets}
-				rowSelection={{
-					type: "radio",
+				rowKey="name"
+				selection={{
 					onSelect: () => showDeleteBucketButton(),
 				}}
-				rowKey="name"
+				emptyState="No buckets yet. Create one to get started."
 			/>
 
 			<Modal
-				title="Create New Bucket"
 				open={isCreateBucketModalOpen}
-				onOk={handleCreateBucketModalSubmit}
-				onCancel={hideCreateBucketModal}
+				title="Create New Bucket"
+				description="Bucket names must be unique within this account."
+				confirmLabel="Create Bucket"
+				onConfirm={handleCreateBucketModalSubmit}
+				onClose={hideCreateBucketModal}
 			>
-				<Input
-					placeholder="Bucket Name"
+				<TextField
+					label="Bucket Name"
+					placeholder="my-bucket"
 					value={newBucketName}
 					onChange={(e) => handleNewBucketNameChange(e)}
 				/>
