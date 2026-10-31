@@ -7,12 +7,16 @@ import { Button } from "../../components/ui/button";
 import { Modal } from "../../components/ui/modal";
 import { DataTable, type Column } from "../../components/ui/table";
 import { convertBytesToMegabytes } from "../../utils/math";
-import { useDeleteObject } from "../../services/mutations/object.mutation";
+import {
+	useDeleteObject,
+	useUploadObject,
+} from "../../services/mutations/object.mutation";
 import {
 	objectsQueryOptions,
 	type ObjectRecord,
 } from "../../services/loaders/objects.loader";
 import { PreviewModal } from "../../components/ui/preview-modal";
+import { UploadModal } from "../../components/ui/upload-modal";
 import { downloadObjectFile } from "../../services/queries/object.query";
 import { toast } from "sonner";
 
@@ -66,12 +70,21 @@ export const ListObjects = () => {
 	const [previewKey, setPreviewKey] = React.useState<string | null>(null);
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
 	const [isDownloading, setIsDownloading] = React.useState(false);
+	const [isUploadModalOpen, setIsUploadModalOpen] = React.useState(false);
+	const [uploadProgress, setUploadProgress] = React.useState(0);
+	const [uploadError, setUploadError] = React.useState<string | null>(null);
 
 	const {
 		mutate: deleteObject,
 		isPending: isDeleting,
 		reset: resetDeleteObject,
 	} = useDeleteObject();
+
+	const {
+		mutate: uploadObject,
+		isPending: isUploading,
+		reset: resetUploadObject,
+	} = useUploadObject();
 
 	const columns = React.useMemo(
 		() => buildColumns((objectKey) => setPreviewKey(objectKey)),
@@ -109,6 +122,49 @@ export const ListObjects = () => {
 		} finally {
 			setIsDownloading(false);
 		}
+	};
+
+	const showUploadModal = () => {
+		setUploadProgress(0);
+		setUploadError(null);
+		setIsUploadModalOpen(true);
+	};
+
+	const hideUploadModal = () => {
+		setIsUploadModalOpen(false);
+		setUploadProgress(0);
+		setUploadError(null);
+		resetUploadObject();
+	};
+
+	const handleUploadObject = (file: File) => {
+		if (!bucketName) {
+			return;
+		}
+
+		setUploadProgress(0);
+		setUploadError(null);
+
+		uploadObject(
+			{
+				bucketName,
+				file,
+				onProgress: setUploadProgress,
+			},
+			{
+				onSuccess: () => {
+					toast.success(`Uploaded "${file.name}".`);
+					hideUploadModal();
+				},
+				onError: (error) => {
+					setUploadError(
+						error instanceof Error
+							? error.message
+							: "Could not upload this file."
+					);
+				},
+			}
+		);
 	};
 
 	const showDeleteModal = () => {
@@ -179,7 +235,7 @@ export const ListObjects = () => {
 				<div className="flex items-center gap-2">
 					{selectedKey && (
 						<Button
-							variant="secondary"
+							variant="primary"
 							onClick={() => handleDownloadObject()}
 							disabled={isDownloading}
 						>
@@ -192,6 +248,12 @@ export const ListObjects = () => {
 					{selectedKey && (
 						<Button variant="danger" onClick={showDeleteModal}>
 							Delete Object
+						</Button>
+					)}
+
+					{!selectedKey && (
+						<Button variant="primary" onClick={showUploadModal}>
+							Upload Object
 						</Button>
 					)}
 				</div>
@@ -218,6 +280,15 @@ export const ListObjects = () => {
 				isConfirming={isDeleting}
 				onConfirm={handleDeleteObject}
 				onClose={hideDeleteModal}
+			/>
+
+			<UploadModal
+				open={isUploadModalOpen}
+				onClose={hideUploadModal}
+				onUpload={handleUploadObject}
+				isUploading={isUploading}
+				progress={uploadProgress}
+				errorMessage={uploadError}
 			/>
 
 			{previewKey && bucketName && (

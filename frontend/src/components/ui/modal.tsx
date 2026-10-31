@@ -2,11 +2,12 @@ import React from "react";
 import { cx } from "../../utils/cx";
 import { Button } from "./button";
 
-type ModalSize = "md" | "lg";
+type ModalSize = "md" | "lg" | "xl";
 
 const sizes: Record<ModalSize, string> = {
 	md: "max-w-md",
 	lg: "max-w-3xl",
+	xl: "max-w-5xl",
 };
 
 interface ModalProps {
@@ -19,6 +20,7 @@ interface ModalProps {
 	confirmVariant?: "primary" | "danger";
 	size?: ModalSize;
 	isConfirming?: boolean;
+	confirmDisabled?: boolean;
 	onConfirm: () => void;
 	onClose: () => void;
 	children?: React.ReactNode;
@@ -34,6 +36,7 @@ export const Modal = ({
 	confirmVariant = "primary",
 	size = "md",
 	isConfirming = false,
+	confirmDisabled = false,
 	onConfirm,
 	onClose,
 	children,
@@ -100,7 +103,7 @@ export const Modal = ({
 					<Button
 						variant={confirmVariant}
 						onClick={onConfirm}
-						disabled={isConfirming}
+						disabled={isConfirming || confirmDisabled}
 					>
 						{isConfirming ? (pendingLabel ?? confirmLabel) : confirmLabel}
 					</Button>
