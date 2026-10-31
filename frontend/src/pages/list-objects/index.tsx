@@ -1,18 +1,19 @@
 import React from "react";
-import { Link, useLoaderData, useNavigation } from "react-router";
+import { Link, useNavigation, useParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 import { formatDate } from "../../utils/time";
 import { Loading } from "../../components/loading";
 import { Button } from "../../components/ui/button";
+import { Modal } from "../../components/ui/modal";
 import { DataTable, type Column } from "../../components/ui/table";
 import { convertBytesToMegabytes } from "../../utils/math";
+import { useDeleteObject } from "../../services/mutations/object.mutation";
+import {
+	objectsQueryOptions,
+	type ObjectRecord,
+} from "../../services/loaders/objects.loader";
 
-export interface DataType {
-	key: string;
-	size: number;
-	lastModified: string;
-}
-
-const columns: Column<DataType>[] = [
+const columns: Column<ObjectRecord>[] = [
 	{
 		title: "Key",
 		dataIndex: "key",
@@ -44,26 +45,60 @@ const columns: Column<DataType>[] = [
 export const ListObjects = () => {
 	const navigation = useNavigation();
 	const isLoading = navigation.state === "loading";
-	const [isObjectActionVisible, setIsObjectActionVisible] =
-		React.useState(false);
+	const { name: bucketName } = useParams();
+	const [selectedKey, setSelectedKey] = React.useState<string | null>(null);
+	const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
+
+	const {
+		mutate: deleteObject,
+		isPending: isDeleting,
+		reset: resetDeleteObject,
+	} = useDeleteObject();
 
 	const handleObjectSelection = (selectedRowKeys: React.Key[]) => {
-		setIsObjectActionVisible(selectedRowKeys.length > 0);
+		setSelectedKey(
+			selectedRowKeys.length > 0 ? String(selectedRowKeys[0]) : null
+		);
 	};
 
 	const handleDownloadObject = () => {
 		// TODO: Make API request and trigger object download.
-		setIsObjectActionVisible(false);
+		setSelectedKey(null);
+	};
+
+	const showDeleteModal = () => {
+		setIsDeleteModalOpen(true);
+	};
+
+	const hideDeleteModal = () => {
+		setIsDeleteModalOpen(false);
+		resetDeleteObject();
 	};
 
 	const handleDeleteObject = () => {
-		// TODO: Make API request and invalidate list objects then.
-		setIsObjectActionVisible(false);
+		if (!bucketName || !selectedKey) {
+			return;
+		}
+
+		deleteObject(
+			{ bucketName, key: selectedKey },
+			{
+				onSuccess: () => {
+					setSelectedKey(null);
+					setIsDeleteModalOpen(false);
+				},
+			}
+		);
 	};
 
-	const { objects } = useLoaderData();
+	const { data, isPending } = useQuery({
+		...objectsQueryOptions(bucketName ?? ""),
+		enabled: Boolean(bucketName),
+	});
 
-	if (isLoading) {
+	const objects = data?.objects ?? [];
+
+	if (isLoading || (isPending && Boolean(bucketName))) {
 		return <Loading />;
 	}
 
@@ -96,13 +131,13 @@ export const ListObjects = () => {
 				</div>
 
 				<div className="flex items-center gap-2">
-					{isObjectActionVisible && (
-						<Button variant="danger" onClick={handleDeleteObject}>
+					{selectedKey && (
+						<Button variant="danger" onClick={showDeleteModal}>
 							Delete Object
 						</Button>
 					)}
 
-					{isObjectActionVisible && (
+					{selectedKey && (
 						<Button variant="secondary" onClick={handleDownloadObject}>
 							Download Object
 						</Button>
@@ -110,7 +145,7 @@ export const ListObjects = () => {
 				</div>
 			</div>
 
-			<DataTable<DataType>
+			<DataTable<ObjectRecord>
 				columns={columns}
 				dataSource={objects}
 				rowKey="key"
@@ -119,6 +154,18 @@ export const ListObjects = () => {
 						handleObjectSelection(selectedKey ? [selectedKey] : []),
 				}}
 				emptyState="This bucket has no objects yet."
+			/>
+
+			<Modal
+				open={isDeleteModalOpen}
+				title="Delete Object"
+				description={`This permanently deletes "${selectedKey}" from this bucket. This action cannot be undone.`}
+				confirmLabel="Delete Object"
+				pendingLabel="Deleting..."
+				confirmVariant="danger"
+				isConfirming={isDeleting}
+				onConfirm={handleDeleteObject}
+				onClose={hideDeleteModal}
 			/>
 		</div>
 	);

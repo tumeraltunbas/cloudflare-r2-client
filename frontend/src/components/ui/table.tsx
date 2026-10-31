@@ -29,7 +29,9 @@ export function DataTable<T>({
 	selection,
 	emptyState,
 }: DataTableProps<T>) {
-	const [selectedKey, setSelectedKey] = React.useState<React.Key | null>(null);
+	const [selectedKey, setSelectedKey] = React.useState<React.Key | null>(
+		null
+	);
 
 	const handleSelect = (key: React.Key) => {
 		const nextKey = selectedKey === key ? null : key;
@@ -56,10 +58,16 @@ export function DataTable<T>({
 								<th
 									key={column.key}
 									scope="col"
-									style={column.width ? { width: column.width } : undefined}
+									style={
+										column.width
+											? { width: column.width }
+											: undefined
+									}
 									className={cx(
 										"whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-500",
-										column.align === "right" ? "text-right" : "text-left"
+										column.align === "right"
+											? "text-right"
+											: "text-left"
 									)}
 								>
 									{column.title}
@@ -72,7 +80,9 @@ export function DataTable<T>({
 						{dataSource.length === 0 && (
 							<tr>
 								<td
-									colSpan={columns.length + (selection ? 1 : 0)}
+									colSpan={
+										columns.length + (selection ? 1 : 0)
+									}
 									className="px-4 py-12 text-center text-sm text-ink-500"
 								>
 									{emptyState ?? "Nothing here yet."}
@@ -87,7 +97,9 @@ export function DataTable<T>({
 							return (
 								<tr
 									key={String(key)}
-									onClick={() => selection && handleSelect(key)}
+									onClick={() =>
+										selection && handleSelect(key)
+									}
 									className={cx(
 										"border-b border-line/70 last:border-b-0 transition-colors duration-100",
 										selection && "cursor-pointer",
@@ -102,9 +114,15 @@ export function DataTable<T>({
 												type="radio"
 												name="row-selection"
 												checked={isSelected}
-												onChange={() => handleSelect(key)}
-												onClick={(event) => event.stopPropagation()}
-												aria-label={`Select ${String(key)}`}
+												onChange={() =>
+													handleSelect(key)
+												}
+												onClick={(event) =>
+													event.stopPropagation()
+												}
+												aria-label={`Select ${String(
+													key
+												)}`}
 												className="h-4 w-4 cursor-pointer accent-cloudflare-orange"
 											/>
 										</td>
@@ -117,7 +135,9 @@ export function DataTable<T>({
 												key={column.key}
 												className={cx(
 													"px-4 py-3.5 align-middle text-ink-700",
-													column.align === "right" ? "text-right" : "text-left"
+													column.align === "right"
+														? "text-right"
+														: "text-left"
 												)}
 											>
 												{column.render

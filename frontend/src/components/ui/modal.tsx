@@ -7,7 +7,10 @@ interface ModalProps {
 	title: string;
 	description?: string;
 	confirmLabel?: string;
+	pendingLabel?: string;
 	cancelLabel?: string;
+	confirmVariant?: "primary" | "danger";
+	isConfirming?: boolean;
 	onConfirm: () => void;
 	onClose: () => void;
 	children?: React.ReactNode;
@@ -18,7 +21,10 @@ export const Modal = ({
 	title,
 	description,
 	confirmLabel = "Confirm",
+	pendingLabel,
 	cancelLabel = "Cancel",
+	confirmVariant = "primary",
+	isConfirming = false,
 	onConfirm,
 	onClose,
 	children,
@@ -29,14 +35,14 @@ export const Modal = ({
 		}
 
 		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === "Escape") {
+			if (event.key === "Escape" && !isConfirming) {
 				onClose();
 			}
 		};
 
 		document.addEventListener("keydown", handleKeyDown);
 		return () => document.removeEventListener("keydown", handleKeyDown);
-	}, [open, onClose]);
+	}, [open, onClose, isConfirming]);
 
 	if (!open) {
 		return null;
@@ -46,7 +52,7 @@ export const Modal = ({
 		<div
 			className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 animate-fade-in"
 			onMouseDown={(event) => {
-				if (event.target === event.currentTarget) {
+				if (event.target === event.currentTarget && !isConfirming) {
 					onClose();
 				}
 			}}
@@ -57,21 +63,34 @@ export const Modal = ({
 				aria-label={title}
 				className="w-full max-w-md rounded-xl border border-line bg-surface shadow-pop animate-scale-in"
 			>
-				<div className="border-b border-line px-5 py-4">
+				<div
+					className={cx(
+						"px-5 py-4",
+						Boolean(children) && "border-b border-line"
+					)}
+				>
 					<h2 className="text-base font-semibold text-ink-900">{title}</h2>
 					{description && (
 						<p className="mt-1 text-sm text-ink-500">{description}</p>
 					)}
 				</div>
 
-				<div className="px-5 py-4">{children}</div>
+				{children ? <div className="px-5 py-4">{children}</div> : null}
 
 				<div className="flex justify-end gap-2 rounded-b-xl border-t border-line bg-surface-raised px-5 py-3.5">
-					<Button variant="secondary" onClick={onClose}>
+					<Button
+						variant="secondary"
+						onClick={onClose}
+						disabled={isConfirming}
+					>
 						{cancelLabel}
 					</Button>
-					<Button variant="primary" onClick={onConfirm}>
-						{confirmLabel}
+					<Button
+						variant={confirmVariant}
+						onClick={onConfirm}
+						disabled={isConfirming}
+					>
+						{isConfirming ? (pendingLabel ?? confirmLabel) : confirmLabel}
 					</Button>
 				</div>
 			</div>
