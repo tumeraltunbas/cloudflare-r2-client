@@ -13,7 +13,8 @@ import {
 import { APP_ROUTES } from '../constants/routes';
 import {
     CreateBucketReqDto,
-    DeleteObjectReqDto,
+    DeleteObjectsBodyReqDto,
+    DeleteObjectsParamsReqDto,
     GetObjectReqDto,
     ListObjectsReqDto,
     RemoveBucketReqDto,
@@ -62,14 +63,17 @@ export const CloudflareRoutes: FastifyPluginAsync = async (
             cloudflareController.listObjects(request),
     );
 
-    fastify.delete(
+    fastify.post(
         APP_ROUTES.cloudflare.deleteObject.endpoint,
         {
             schema: APP_ROUTES.cloudflare.deleteObject.requestDtoSchema,
         },
         async (
-            request: FastifyRequest<{ Params: DeleteObjectReqDto }>,
-        ): Promise<void> => cloudflareController.deleteObject(request),
+            request: FastifyRequest<{
+                Params: DeleteObjectsParamsReqDto;
+                Body: DeleteObjectsBodyReqDto;
+            }>,
+        ): Promise<void> => cloudflareController.deleteObjects(request),
     );
 
     fastify.post(

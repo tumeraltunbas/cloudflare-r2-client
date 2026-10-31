@@ -18,7 +18,8 @@ import {
 } from '../infrastructure/error/error';
 import {
     CreateBucketReqDto,
-    DeleteObjectReqDto,
+    DeleteObjectsBodyReqDto,
+    DeleteObjectsParamsReqDto,
     GetObjectReqDto,
     ListObjectsReqDto,
     RemoveBucketReqDto,
@@ -131,15 +132,18 @@ export class CloudflareService {
         return listObjectsResDto;
     }
 
-    async deleteObject(
-        request: FastifyRequest<{ Params: DeleteObjectReqDto }>,
+    async deleteObjects(
+        request: FastifyRequest<{
+            Params: DeleteObjectsParamsReqDto;
+            Body: DeleteObjectsBodyReqDto;
+        }>,
     ): Promise<void> {
-        const { params } = request;
+        const { params, body } = request;
 
         try {
-            await this.cloudflareRequestClient.deleteObject(
+            await this.cloudflareRequestClient.deleteObjects(
                 params.name,
-                params.key,
+                body.keys,
             );
         } catch (error) {
             request.log.error(

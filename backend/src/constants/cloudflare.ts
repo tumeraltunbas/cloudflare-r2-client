@@ -5,29 +5,29 @@ export const CLOUDFLARE_R2_ENDPOINTS = {
         list: {
             method: HTTP_METHODS.GET,
             endpoint: (accountId: string): string =>
-                `accounts/${accountId}/r2/buckets`,
+                `accounts/${encodeURIComponent(accountId)}/r2/buckets`,
         },
         get: {
             method: HTTP_METHODS.GET,
             endpoint: (accountId: string, bucketName: string): string =>
-                `accounts/${accountId}/r2/buckets/${bucketName}`,
+                `accounts/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucketName)}`,
         },
         create: {
             method: HTTP_METHODS.POST,
             endpoint: (accountId: string): string =>
-                `accounts/${accountId}/r2/buckets`,
+                `accounts/${encodeURIComponent(accountId)}/r2/buckets`,
         },
         delete: {
             method: HTTP_METHODS.DELETE,
             endpoint: (accountId: string, bucketName: string): string =>
-                `accounts/${accountId}/r2/buckets/${bucketName}`,
+                `accounts/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucketName)}`,
         },
     },
     object: {
         list: {
             method: HTTP_METHODS.GET,
             endpoint: (accountId: string, bucketName: string): string =>
-                `accounts/${accountId}/r2/buckets/${bucketName}/objects`,
+                `accounts/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucketName)}/objects`,
         },
         delete: {
             method: HTTP_METHODS.DELETE,
@@ -36,7 +36,7 @@ export const CLOUDFLARE_R2_ENDPOINTS = {
                 bucketName: string,
                 objectKey: string,
             ): string =>
-                `accounts/${accountId}/r2/buckets/${bucketName}/objects/${objectKey}`,
+                `accounts/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucketName)}/objects/${encodeURIComponent(objectKey)}`,
         },
         upload: {
             method: HTTP_METHODS.PUT,
@@ -45,7 +45,7 @@ export const CLOUDFLARE_R2_ENDPOINTS = {
                 bucketName: string,
                 objectKey: string,
             ): string =>
-                `accounts/${accountId}/r2/buckets/${bucketName}/objects/${objectKey}`,
+                `accounts/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucketName)}/objects/${encodeURIComponent(objectKey)}`,
         },
     },
 } as const;

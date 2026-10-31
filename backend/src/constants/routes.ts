@@ -56,7 +56,7 @@ export const APP_ROUTES = {
             },
         },
         deleteObject: {
-            endpoint: '/buckets/:name/objects/:key',
+            endpoint: '/buckets/:name/objects/remove',
             requestDtoSchema: {
                 params: {
                     type: JAVASCRIPT_DATA_TYPES.OBJECT,
@@ -66,13 +66,22 @@ export const APP_ROUTES = {
                             transform: ['trim'],
                             minLength: 1,
                         },
-                        key: {
-                            type: JAVASCRIPT_DATA_TYPES.STRING,
-                            transform: ['trim'],
-                            minLength: 1,
+                    },
+                    required: ['name'],
+                },
+                body: {
+                    type: JAVASCRIPT_DATA_TYPES.OBJECT,
+                    properties: {
+                        keys: {
+                            type: JAVASCRIPT_DATA_TYPES.ARRAY,
+                            items: {
+                                type: JAVASCRIPT_DATA_TYPES.STRING,
+                                transform: ['trim'],
+                                minLength: 1,
+                            },
                         },
                     },
-                    required: ['name', 'key'],
+                    required: ['keys'],
                 },
             },
         },

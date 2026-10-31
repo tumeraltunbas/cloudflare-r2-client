@@ -10,9 +10,12 @@ export class ListObjectsReqDto {
     name: string;
 }
 
-export class DeleteObjectReqDto {
+export class DeleteObjectsParamsReqDto {
     name: string;
-    key: string;
+}
+
+export class DeleteObjectsBodyReqDto {
+    keys: string[];
 }
 
 export class UploadObjectReqDto {

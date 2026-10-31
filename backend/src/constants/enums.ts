@@ -37,4 +37,5 @@ export enum JAVASCRIPT_DATA_TYPES {
     NUMBER = 'number',
     BOOLEAN = 'boolean',
     OBJECT = 'object',
+    ARRAY = 'array',
 }

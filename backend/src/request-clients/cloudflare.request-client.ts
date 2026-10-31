@@ -99,26 +99,41 @@ export class CloudflareRequestClient {
         return response.result;
     }
 
-    async deleteObject(
+    async deleteObjects(
         bucketName: string,
-        objectKey: string,
-    ): Promise<DeleteObjectResponse> {
+        objectKeys: string[],
+    ): Promise<void> {
         const deleteObjectInfo = CLOUDFLARE_R2_ENDPOINTS.object.delete;
         const method = deleteObjectInfo.method;
-        const endpoint = deleteObjectInfo.endpoint(
-            this.cloudflareConfig.accountId,
-            bucketName,
-            objectKey,
+
+        const endpoints = objectKeys.map((key) =>
+            deleteObjectInfo.endpoint(
+                this.cloudflareConfig.accountId,
+                bucketName,
+                key,
+            ),
         );
 
-        const response: R2Response<DeleteObjectResponse> =
-            await this.r2Client.request(endpoint, method);
+        console.log('deleteObjects - endpoints:', endpoints);
 
-        if (!response.success) {
-            throw response.errors;
+        const responses: R2Response<DeleteObjectResponse>[] = await Promise.all(
+            endpoints.map((endpoint) =>
+                this.r2Client.request<R2Response<DeleteObjectResponse>>(
+                    endpoint,
+                    method,
+                ),
+            ),
+        );
+
+        const errors = responses
+            .filter((response) => !response.success)
+            .flatMap((response) => response.errors);
+
+        if (errors.length > 0) {
+            throw errors;
         }
 
-        return undefined;
+        return;
     }
 
     async uploadObject(

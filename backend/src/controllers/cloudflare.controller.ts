@@ -8,7 +8,8 @@ import {
 } from '../models/dtos/project/res/cloudflare';
 import {
     CreateBucketReqDto,
-    DeleteObjectReqDto,
+    DeleteObjectsBodyReqDto,
+    DeleteObjectsParamsReqDto,
     GetObjectReqDto,
     ListObjectsReqDto,
     RemoveBucketReqDto,
@@ -44,10 +45,13 @@ export class CloudflareController {
         return this.cloudflareService.listObjects(request);
     }
 
-    async deleteObject(
-        request: FastifyRequest<{ Params: DeleteObjectReqDto }>,
+    async deleteObjects(
+        request: FastifyRequest<{
+            Params: DeleteObjectsParamsReqDto;
+            Body: DeleteObjectsBodyReqDto;
+        }>,
     ): Promise<void> {
-        return this.cloudflareService.deleteObject(request);
+        return this.cloudflareService.deleteObjects(request);
     }
 
     async uploadObject(
