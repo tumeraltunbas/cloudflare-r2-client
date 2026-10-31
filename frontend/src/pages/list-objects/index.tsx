@@ -12,14 +12,28 @@ import {
 	objectsQueryOptions,
 	type ObjectRecord,
 } from "../../services/loaders/objects.loader";
+import { PreviewModal } from "../../components/ui/preview-modal";
+import { downloadObjectFile } from "../../services/queries/object.query";
+import { toast } from "sonner";
 
-const columns: Column<ObjectRecord>[] = [
+const buildColumns = (
+	onPreview: (objectKey: string) => void
+): Column<ObjectRecord>[] => [
 	{
 		title: "Key",
 		dataIndex: "key",
 		key: "key",
 		render: (record) => (
-			<span className="font-medium text-ink-900">{record.key}</span>
+			<button
+				type="button"
+				onClick={(event) => {
+					event.stopPropagation();
+					onPreview(record.key);
+				}}
+				className="font-medium text-cloudflare-orange-text underline-offset-4 hover:underline"
+			>
+				{record.key}
+			</button>
 		),
 	},
 	{
@@ -37,7 +51,9 @@ const columns: Column<ObjectRecord>[] = [
 		dataIndex: "lastModified",
 		key: "lastModifiedAt",
 		render: (record) => (
-			<span className="text-ink-500">{formatDate(record.lastModified)}</span>
+			<span className="text-ink-500">
+				{formatDate(record.lastModified)}
+			</span>
 		),
 	},
 ];
@@ -47,7 +63,9 @@ export const ListObjects = () => {
 	const isLoading = navigation.state === "loading";
 	const { name: bucketName } = useParams();
 	const [selectedKey, setSelectedKey] = React.useState<string | null>(null);
+	const [previewKey, setPreviewKey] = React.useState<string | null>(null);
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
+	const [isDownloading, setIsDownloading] = React.useState(false);
 
 	const {
 		mutate: deleteObject,
@@ -55,15 +73,42 @@ export const ListObjects = () => {
 		reset: resetDeleteObject,
 	} = useDeleteObject();
 
+	const columns = React.useMemo(
+		() => buildColumns((objectKey) => setPreviewKey(objectKey)),
+		[]
+	);
+
 	const handleObjectSelection = (selectedRowKeys: React.Key[]) => {
 		setSelectedKey(
 			selectedRowKeys.length > 0 ? String(selectedRowKeys[0]) : null
 		);
 	};
 
-	const handleDownloadObject = () => {
-		// TODO: Make API request and trigger object download.
-		setSelectedKey(null);
+	const hidePreviewModal = () => {
+		setPreviewKey(null);
+	};
+
+	const handleDownloadObject = async (
+		objectKey: string | null = selectedKey
+	) => {
+		if (!bucketName || !objectKey) {
+			return;
+		}
+
+		setIsDownloading(true);
+
+		try {
+			await downloadObjectFile(bucketName, objectKey);
+			toast.success("Download started.");
+		} catch (error) {
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Could not download this object."
+			);
+		} finally {
+			setIsDownloading(false);
+		}
 	};
 
 	const showDeleteModal = () => {
@@ -125,21 +170,28 @@ export const ListObjects = () => {
 						Bucket Objects
 					</h1>
 					<p className="mt-1 text-sm text-ink-500">
-						{objects.length} {objects.length === 1 ? "object" : "objects"} in
-						this bucket.
+						{objects.length}{" "}
+						{objects.length === 1 ? "object" : "objects"} in this
+						bucket.
 					</p>
 				</div>
 
 				<div className="flex items-center gap-2">
 					{selectedKey && (
-						<Button variant="danger" onClick={showDeleteModal}>
-							Delete Object
+						<Button
+							variant="secondary"
+							onClick={() => handleDownloadObject()}
+							disabled={isDownloading}
+						>
+							{isDownloading
+								? "Downloading..."
+								: "Download Object"}
 						</Button>
 					)}
 
 					{selectedKey && (
-						<Button variant="secondary" onClick={handleDownloadObject}>
-							Download Object
+						<Button variant="danger" onClick={showDeleteModal}>
+							Delete Object
 						</Button>
 					)}
 				</div>
@@ -167,6 +219,15 @@ export const ListObjects = () => {
 				onConfirm={handleDeleteObject}
 				onClose={hideDeleteModal}
 			/>
+
+			{previewKey && bucketName && (
+				<PreviewModal
+					bucketName={bucketName}
+					objectKey={previewKey}
+					onClose={hidePreviewModal}
+					onDownload={() => handleDownloadObject(previewKey)}
+				/>
+			)}
 		</div>
 	);
 };

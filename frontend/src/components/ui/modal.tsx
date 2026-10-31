@@ -2,6 +2,13 @@ import React from "react";
 import { cx } from "../../utils/cx";
 import { Button } from "./button";
 
+type ModalSize = "md" | "lg";
+
+const sizes: Record<ModalSize, string> = {
+	md: "max-w-md",
+	lg: "max-w-3xl",
+};
+
 interface ModalProps {
 	open: boolean;
 	title: string;
@@ -10,6 +17,7 @@ interface ModalProps {
 	pendingLabel?: string;
 	cancelLabel?: string;
 	confirmVariant?: "primary" | "danger";
+	size?: ModalSize;
 	isConfirming?: boolean;
 	onConfirm: () => void;
 	onClose: () => void;
@@ -24,6 +32,7 @@ export const Modal = ({
 	pendingLabel,
 	cancelLabel = "Cancel",
 	confirmVariant = "primary",
+	size = "md",
 	isConfirming = false,
 	onConfirm,
 	onClose,
@@ -61,7 +70,10 @@ export const Modal = ({
 				role="dialog"
 				aria-modal="true"
 				aria-label={title}
-				className="w-full max-w-md rounded-xl border border-line bg-surface shadow-pop animate-scale-in"
+				className={cx(
+					"w-full rounded-xl border border-line bg-surface shadow-pop animate-scale-in",
+					sizes[size]
+				)}
 			>
 				<div
 					className={cx(
