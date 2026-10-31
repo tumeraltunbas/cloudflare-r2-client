@@ -14,7 +14,6 @@ import {
     ListObjectsResponse,
     R2Response,
 } from '../models/dtos/cloudflare/r2';
-import { parseResponseBody } from '../utils/http';
 
 export class CloudflareRequestClient {
     private readonly r2Client: R2Client;
@@ -54,7 +53,12 @@ export class CloudflareRequestClient {
         };
 
         const response: R2Response<CreateBucketResponse> =
-            await this.r2Client.request(endpoint, method, body);
+            await this.r2Client.request(
+                endpoint,
+                method,
+                body,
+                CONTENT_TYPES.APPLICATION_JSON,
+            );
 
         if (!response.success) {
             throw response.errors;
@@ -63,7 +67,17 @@ export class CloudflareRequestClient {
         return response.result;
     }
 
-    async deleteBucket(bucketName: string): Promise<DeleteBucketResponse> {
+    async deleteBucket(bucketNames: string[]): Promise<void> {
+        await Promise.all(
+            bucketNames.map((bucketName) =>
+                this.deleteBucketByName(bucketName),
+            ),
+        );
+    }
+
+    private async deleteBucketByName(
+        bucketName: string,
+    ): Promise<DeleteBucketResponse> {
         const deleteBucketInfo = CLOUDFLARE_R2_ENDPOINTS.bucket.delete;
         const method = deleteBucketInfo.method;
         const endpoint = deleteBucketInfo.endpoint(
@@ -189,10 +203,7 @@ export class CloudflareRequestClient {
             HTTP_HEADERS.CONTENT_TYPE,
         ) as CONTENT_TYPES;
 
-        const responseBody: unknown = await parseResponseBody(
-            response,
-            contentType,
-        );
+        const responseBody = Buffer.from(await response.arrayBuffer());
 
         const getObjectResponse: GetObjectResponse = {
             responseBody,

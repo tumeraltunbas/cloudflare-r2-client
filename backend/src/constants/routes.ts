@@ -24,18 +24,22 @@ export const APP_ROUTES = {
             },
         },
         deleteBucket: {
-            endpoint: '/buckets/:name',
+            endpoint: '/buckets',
             requestDtoSchema: {
-                params: {
+                body: {
                     type: JAVASCRIPT_DATA_TYPES.OBJECT,
                     properties: {
-                        name: {
-                            type: JAVASCRIPT_DATA_TYPES.STRING,
-                            transform: ['trim'],
-                            minLength: 1,
+                        names: {
+                            type: JAVASCRIPT_DATA_TYPES.ARRAY,
+                            items: {
+                                type: JAVASCRIPT_DATA_TYPES.STRING,
+                                transform: ['trim'],
+                                minLength: 1,
+                            },
+                            minItems: 1,
                         },
                     },
-                    required: ['name'],
+                    required: ['names'],
                 },
             },
         },
@@ -102,7 +106,7 @@ export const APP_ROUTES = {
             },
         },
         getObject: {
-            endpoint: '/buckets/:name/objects/:key',
+            endpoint: '/buckets/:name/objects/download',
             requestDtoSchema: {
                 params: {
                     type: JAVASCRIPT_DATA_TYPES.OBJECT,
@@ -112,13 +116,23 @@ export const APP_ROUTES = {
                             transform: ['trim'],
                             minLength: 1,
                         },
-                        key: {
-                            type: JAVASCRIPT_DATA_TYPES.STRING,
-                            transform: ['trim'],
-                            minLength: 1,
+                    },
+                    required: ['name'],
+                },
+                body: {
+                    type: JAVASCRIPT_DATA_TYPES.OBJECT,
+                    properties: {
+                        keys: {
+                            type: JAVASCRIPT_DATA_TYPES.ARRAY,
+                            items: {
+                                type: JAVASCRIPT_DATA_TYPES.STRING,
+                                transform: ['trim'],
+                                minLength: 1,
+                            },
+                            minItems: 1,
                         },
                     },
-                    required: ['name', 'key'],
+                    required: ['keys'],
                 },
             },
         },

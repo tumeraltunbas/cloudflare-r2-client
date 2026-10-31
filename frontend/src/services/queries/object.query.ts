@@ -7,17 +7,21 @@ export const objectBlobQueryKey = (bucketName: string, objectKey: string) => [
 	objectKey,
 ];
 
-function buildObjectEndpoint(bucketName: string, objectKey: string): string {
+function buildObjectEndpoint(bucketName: string): string {
 	return `/cloudflare/buckets/${encodeURIComponent(
 		bucketName
-	)}/objects/${encodeURIComponent(objectKey)}`;
+	)}/objects/download`;
 }
 
 export async function fetchObjectBlob(
 	bucketName: string,
-	objectKey: string
+	objectKeys: string[]
 ): Promise<Blob> {
-	const response = await fetcher(buildObjectEndpoint(bucketName, objectKey));
+	const response = await fetcher(buildObjectEndpoint(bucketName), {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ keys: objectKeys }),
+	});
 
 	if (!response.ok) {
 		const body = await response.json().catch(() => null);
@@ -32,21 +36,24 @@ export const objectBlobQueryOptions = (
 	objectKey: string
 ) => ({
 	queryKey: objectBlobQueryKey(bucketName, objectKey),
-	queryFn: () => fetchObjectBlob(bucketName, objectKey),
+	queryFn: () => fetchObjectBlob(bucketName, [objectKey]),
 	staleTime: 0,
 	gcTime: 0,
 });
 
 export async function downloadObjectFile(
 	bucketName: string,
-	objectKey: string
+	objectKeys: string[]
 ): Promise<void> {
-	const blob = await fetchObjectBlob(bucketName, objectKey);
+	const blob = await fetchObjectBlob(bucketName, objectKeys);
 	const objectUrl = URL.createObjectURL(blob);
 
 	const anchor = document.createElement("a");
 	anchor.href = objectUrl;
-	anchor.download = getFileNameFromKey(objectKey);
+	anchor.download =
+		objectKeys.length === 1
+			? getFileNameFromKey(objectKeys[0])
+			: "objects.zip";
 
 	document.body.appendChild(anchor);
 	anchor.click();

@@ -3,7 +3,7 @@ export class CreateBucketReqDto {
 }
 
 export class RemoveBucketReqDto {
-    name: string;
+    names: string[];
 }
 
 export class ListObjectsReqDto {
@@ -22,7 +22,10 @@ export class UploadObjectReqDto {
     name: string;
 }
 
-export class GetObjectReqDto {
+export class GetObjectsParamsReqDto {
     name: string;
-    key: string;
+}
+
+export class GetObjectsBodyReqDto {
+    keys: string[];
 }

@@ -20,14 +20,17 @@ import {
     CreateBucketReqDto,
     DeleteObjectsBodyReqDto,
     DeleteObjectsParamsReqDto,
-    GetObjectReqDto,
+    GetObjectsBodyReqDto,
+    GetObjectsParamsReqDto,
     ListObjectsReqDto,
     RemoveBucketReqDto,
     UploadObjectReqDto,
 } from '../models/dtos/project/req/cloudflare';
 import { MultipartFile } from '@fastify/multipart';
 import { ERROR_CODES } from '../constants/error';
+import { CONTENT_TYPES } from '../constants/enums';
 import configuration, { FormDataConfig } from '../configuration/configuration';
+import JSZip from 'jszip';
 
 export class CloudflareService {
     private readonly cloudflareRequestClient: CloudflareRequestClient;
@@ -86,12 +89,10 @@ export class CloudflareService {
     }
 
     async deleteBucket(
-        request: FastifyRequest<{ Params: RemoveBucketReqDto }>,
+        request: FastifyRequest<{ Body: RemoveBucketReqDto }>,
     ): Promise<void> {
-        const { params } = request;
-
         try {
-            await this.cloudflareRequestClient.deleteBucket(params.name);
+            await this.cloudflareRequestClient.deleteBucket(request.body.names);
         } catch (error) {
             request.log.error(
                 { error },
@@ -198,16 +199,20 @@ export class CloudflareService {
     }
 
     async getObject(
-        request: FastifyRequest<{ Params: GetObjectReqDto }>,
+        request: FastifyRequest<{
+            Params: GetObjectsParamsReqDto;
+            Body: GetObjectsBodyReqDto;
+        }>,
     ): Promise<GetObjectResDto> {
-        const { params } = request;
+        const { params, body } = request;
 
-        let getObjectResponse: GetObjectResponse = null;
+        let getObjectResponses: GetObjectResponse[] = null;
 
         try {
-            getObjectResponse = await this.cloudflareRequestClient.getObject(
-                params.name,
-                params.key,
+            getObjectResponses = await Promise.all(
+                body.keys.map((key) =>
+                    this.cloudflareRequestClient.getObject(params.name, key),
+                ),
             );
         } catch (error) {
             request.log.error(
@@ -217,9 +222,15 @@ export class CloudflareService {
             throw new ProcessFailureError();
         }
 
+        const zip = new JSZip();
+
+        body.keys.forEach((key, index) => {
+            zip.file(key, getObjectResponses[index].responseBody as Buffer);
+        });
+
         const getObjectResDto: GetObjectResDto = {
-            body: getObjectResponse.responseBody,
-            contentType: getObjectResponse.contentType,
+            body: await zip.generateAsync({ type: 'nodebuffer' }),
+            contentType: CONTENT_TYPES.APPLICATION_ZIP,
         };
 
         return getObjectResDto;

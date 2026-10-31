@@ -9,6 +9,7 @@ export enum HTTP_METHODS {
 export enum HTTP_HEADERS {
     AUTHORIZATION = 'Authorization',
     CONTENT_TYPE = 'Content-Type',
+    CONTENT_DISPOSITION = 'Content-Disposition',
     X_API_KEY = 'x-api-key',
 }
 
@@ -16,6 +17,7 @@ export enum CONTENT_TYPES {
     APPLICATION_JSON = 'application/json',
     APPLICATION_OCTET_STREAM = 'application/octet-stream',
     APPLICATION_PDF = 'application/pdf',
+    APPLICATION_ZIP = 'application/zip',
     IMAGE_JPEG = 'image/jpeg',
     IMAGE_JPG = 'image/jpeg',
     IMAGE_PNG = 'image/png',

@@ -15,7 +15,8 @@ interface DataTableProps<T> {
 	dataSource: T[];
 	rowKey: keyof T & string;
 	selection?: {
-		onSelect: (selectedKey: React.Key) => void;
+		onSelect: (selectedKeys: React.Key[]) => void;
+		selectedKeys?: React.Key[];
 	};
 	emptyState?: React.ReactNode;
 }
@@ -29,14 +30,15 @@ export function DataTable<T>({
 	selection,
 	emptyState,
 }: DataTableProps<T>) {
-	const [selectedKey, setSelectedKey] = React.useState<React.Key | null>(
-		null
-	);
+	const [selectedKeys, setSelectedKeys] = React.useState<React.Key[]>([]);
+	const activeSelectedKeys = selection?.selectedKeys ?? selectedKeys;
 
 	const handleSelect = (key: React.Key) => {
-		const nextKey = selectedKey === key ? null : key;
-		setSelectedKey(nextKey);
-		selection?.onSelect(nextKey ?? "");
+		const nextKeys = activeSelectedKeys.includes(key)
+			? activeSelectedKeys.filter((selectedKey) => selectedKey !== key)
+			: [...activeSelectedKeys, key];
+		setSelectedKeys(nextKeys);
+		selection?.onSelect(nextKeys);
 	};
 
 	return (
@@ -92,7 +94,7 @@ export function DataTable<T>({
 
 						{dataSource.map((record) => {
 							const key = record[rowKey] as React.Key;
-							const isSelected = selectedKey === key;
+							const isSelected = activeSelectedKeys.includes(key);
 
 							return (
 								<tr
@@ -111,8 +113,7 @@ export function DataTable<T>({
 									{selection && (
 										<td className="px-4 py-3.5 align-middle">
 											<input
-												type="radio"
-												name="row-selection"
+												type="checkbox"
 												checked={isSelected}
 												onChange={() =>
 													handleSelect(key)

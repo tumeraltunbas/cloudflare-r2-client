@@ -10,7 +10,8 @@ import {
     CreateBucketReqDto,
     DeleteObjectsBodyReqDto,
     DeleteObjectsParamsReqDto,
-    GetObjectReqDto,
+    GetObjectsBodyReqDto,
+    GetObjectsParamsReqDto,
     ListObjectsReqDto,
     RemoveBucketReqDto,
     UploadObjectReqDto,
@@ -34,7 +35,7 @@ export class CloudflareController {
     }
 
     async deleteBucket(
-        request: FastifyRequest<{ Params: RemoveBucketReqDto }>,
+        request: FastifyRequest<{ Body: RemoveBucketReqDto }>,
     ): Promise<void> {
         return this.cloudflareService.deleteBucket(request);
     }
@@ -61,7 +62,10 @@ export class CloudflareController {
     }
 
     async getObject(
-        request: FastifyRequest<{ Params: GetObjectReqDto }>,
+        request: FastifyRequest<{
+            Params: GetObjectsParamsReqDto;
+            Body: GetObjectsBodyReqDto;
+        }>,
     ): Promise<GetObjectResDto> {
         return this.cloudflareService.getObject(request);
     }

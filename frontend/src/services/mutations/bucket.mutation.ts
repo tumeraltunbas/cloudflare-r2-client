@@ -6,8 +6,8 @@ type CreateBucketParams = {
 	bucketName: string;
 };
 
-type DeleteBucketParams = {
-	bucketName: string;
+type DeleteBucketsParams = {
+	bucketNames: string[];
 };
 
 export const useCreateBucket = () => {
@@ -36,11 +36,13 @@ export const useCreateBucket = () => {
 
 export const useDeleteBucket = () => {
 	return useMutation({
-		mutationFn: async ({ bucketName }: DeleteBucketParams) => {
+		mutationFn: async ({ bucketNames }: DeleteBucketsParams) => {
 			const response = await fetcher(
-				`/cloudflare/buckets/${bucketName}`,
+				"/cloudflare/buckets",
 				{
 					method: "DELETE",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ names: bucketNames }),
 				}
 			);
 

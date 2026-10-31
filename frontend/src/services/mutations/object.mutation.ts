@@ -3,9 +3,9 @@ import { API_BASE_URL, fetcher } from "..";
 import { queryClient } from "../../lib/query-client";
 import { objectsQueryKey } from "../loaders/objects.loader";
 
-type DeleteObjectParams = {
+type DeleteObjectsParams = {
 	bucketName: string;
-	key: string;
+	keys: string[];
 };
 
 type UploadObjectParams = {
@@ -16,12 +16,16 @@ type UploadObjectParams = {
 
 export const useDeleteObject = () => {
 	return useMutation({
-		mutationFn: async ({ bucketName, key }: DeleteObjectParams) => {
+		mutationFn: async ({ bucketName, keys }: DeleteObjectsParams) => {
 			const response = await fetcher(
 				`/cloudflare/buckets/${encodeURIComponent(
 					bucketName
-				)}/objects/${encodeURIComponent(key)}`,
-				{ method: "DELETE" }
+				)}/objects/remove`,
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ keys }),
+				}
 			);
 
 			if (!response.ok) {

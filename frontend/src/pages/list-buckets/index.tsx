@@ -49,9 +49,9 @@ export const ListBuckets = () => {
 	const [isDeleteBucketModalOpen, setIsDeleteBucketModalOpen] =
 		React.useState<boolean>(false);
 	const [newBucketName, setNewBucketName] = React.useState<string>();
-	const [selectedBucketName, setSelectedBucketName] = React.useState<
-		string | null
-	>();
+	const [selectedBucketNames, setSelectedBucketNames] = React.useState<
+		string[]
+	>([]);
 
 	const {
 		mutate: createBucket,
@@ -80,7 +80,7 @@ export const ListBuckets = () => {
 	};
 
 	const hideDeleteBucketModal = () => {
-		setSelectedBucketName(null);
+		setSelectedBucketNames([]);
 		setIsDeleteBucketModalOpen(false);
 		resetDeleteBucket();
 	};
@@ -102,15 +102,15 @@ export const ListBuckets = () => {
 	};
 
 	const handleDeleteBucketModalSubmit = () => {
-		if (!selectedBucketName) {
+		if (selectedBucketNames.length === 0) {
 			return;
 		}
 
 		deleteBucket(
-			{ bucketName: selectedBucketName },
+			{ bucketNames: selectedBucketNames },
 			{
 				onSuccess: () => {
-					setSelectedBucketName(null);
+					setSelectedBucketNames([]);
 					setIsDeleteBucketModalOpen(false);
 				},
 			}
@@ -123,13 +123,13 @@ export const ListBuckets = () => {
 		setNewBucketName(e.target.value);
 	};
 
-	const handleSelectBucket = (selectedKey: React.Key) => {
-		if (!selectedKey) {
-			setSelectedBucketName(null);
+	const handleSelectBucket = (selectedKeys: React.Key[]) => {
+		if (selectedKeys.length === 0) {
+			setSelectedBucketNames([]);
 			return;
 		}
 
-		setSelectedBucketName(selectedKey as string);
+		setSelectedBucketNames(selectedKeys.map(String));
 	};
 
 	const { data, isPending } = useQuery(bucketsQueryOptions());
@@ -154,12 +154,14 @@ export const ListBuckets = () => {
 				</div>
 
 				<div className="flex items-center gap-2">
-					{selectedBucketName && (
+					{selectedBucketNames.length > 0 && (
 						<Button
 							variant="danger"
 							onClick={() => showDeleteBucketModal()}
 						>
-							Delete Bucket
+							{selectedBucketNames.length === 1
+								? "Delete Bucket"
+								: "Delete Buckets"}
 						</Button>
 					)}
 
@@ -177,8 +179,9 @@ export const ListBuckets = () => {
 				dataSource={buckets}
 				rowKey="name"
 				selection={{
-					onSelect: (selectedKey: React.Key) =>
-						handleSelectBucket(selectedKey),
+					selectedKeys: selectedBucketNames,
+					onSelect: (selectedKeys: React.Key[]) =>
+						handleSelectBucket(selectedKeys),
 				}}
 				emptyState="No buckets yet. Create one to get started."
 			/>
@@ -202,9 +205,21 @@ export const ListBuckets = () => {
 
 			<Modal
 				open={isDeleteBucketModalOpen}
-				title="Delete Bucket"
-				description="Are you sure to delete bucket? This action cannot be undone."
-				confirmLabel="Delete Bucket"
+				title={
+					selectedBucketNames.length === 1
+						? "Delete Bucket"
+						: "Delete Buckets"
+				}
+				description={
+					selectedBucketNames.length === 1
+						? "Are you sure you want to delete this bucket? This action cannot be undone."
+						: `Are you sure you want to delete ${selectedBucketNames.length} buckets? This action cannot be undone.`
+				}
+				confirmLabel={
+					selectedBucketNames.length === 1
+						? "Delete Bucket"
+						: "Delete Buckets"
+				}
 				onConfirm={handleDeleteBucketModalSubmit}
 				onClose={hideDeleteBucketModal}
 				isConfirming={isDeleting}

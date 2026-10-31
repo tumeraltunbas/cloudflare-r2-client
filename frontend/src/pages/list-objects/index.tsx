@@ -66,7 +66,7 @@ export const ListObjects = () => {
 	const navigation = useNavigation();
 	const isLoading = navigation.state === "loading";
 	const { name: bucketName } = useParams();
-	const [selectedKey, setSelectedKey] = React.useState<string | null>(null);
+	const [selectedKeys, setSelectedKeys] = React.useState<string[]>([]);
 	const [previewKey, setPreviewKey] = React.useState<string | null>(null);
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
 	const [isDownloading, setIsDownloading] = React.useState(false);
@@ -92,9 +92,7 @@ export const ListObjects = () => {
 	);
 
 	const handleObjectSelection = (selectedRowKeys: React.Key[]) => {
-		setSelectedKey(
-			selectedRowKeys.length > 0 ? String(selectedRowKeys[0]) : null
-		);
+		setSelectedKeys(selectedRowKeys.map(String));
 	};
 
 	const hidePreviewModal = () => {
@@ -102,16 +100,17 @@ export const ListObjects = () => {
 	};
 
 	const handleDownloadObject = async (
-		objectKey: string | null = selectedKey
+		objectKeys: string[] = selectedKeys
 	) => {
-		if (!bucketName || !objectKey) {
+		if (!bucketName || objectKeys.length === 0) {
 			return;
 		}
 
 		setIsDownloading(true);
 
 		try {
-			await downloadObjectFile(bucketName, objectKey);
+			await downloadObjectFile(bucketName, objectKeys);
+			setSelectedKeys([]);
 			toast.success("Download started.");
 		} catch (error) {
 			toast.error(
@@ -177,15 +176,15 @@ export const ListObjects = () => {
 	};
 
 	const handleDeleteObject = () => {
-		if (!bucketName || !selectedKey) {
+		if (!bucketName || selectedKeys.length === 0) {
 			return;
 		}
 
 		deleteObject(
-			{ bucketName, key: selectedKey },
+			{ bucketName, keys: selectedKeys },
 			{
 				onSuccess: () => {
-					setSelectedKey(null);
+					setSelectedKeys([]);
 					setIsDeleteModalOpen(false);
 				},
 			}
@@ -233,7 +232,7 @@ export const ListObjects = () => {
 				</div>
 
 				<div className="flex items-center gap-2">
-					{selectedKey && (
+					{selectedKeys.length > 0 && (
 						<Button
 							variant="primary"
 							onClick={() => handleDownloadObject()}
@@ -241,17 +240,21 @@ export const ListObjects = () => {
 						>
 							{isDownloading
 								? "Downloading..."
-								: "Download Object"}
+								: selectedKeys.length === 1
+								? "Download Object"
+								: "Download Objects"}
 						</Button>
 					)}
 
-					{selectedKey && (
+					{selectedKeys.length > 0 && (
 						<Button variant="danger" onClick={showDeleteModal}>
-							Delete Object
+							{selectedKeys.length === 1
+								? "Delete Object"
+								: "Delete Objects"}
 						</Button>
 					)}
 
-					{!selectedKey && (
+					{selectedKeys.length === 0 && (
 						<Button variant="primary" onClick={showUploadModal}>
 							Upload Object
 						</Button>
@@ -264,17 +267,30 @@ export const ListObjects = () => {
 				dataSource={objects}
 				rowKey="key"
 				selection={{
-					onSelect: (selectedKey) =>
-						handleObjectSelection(selectedKey ? [selectedKey] : []),
+					selectedKeys,
+					onSelect: (selectedKeys) =>
+						handleObjectSelection(selectedKeys),
 				}}
 				emptyState="This bucket has no objects yet."
 			/>
 
 			<Modal
 				open={isDeleteModalOpen}
-				title="Delete Object"
-				description={`This permanently deletes "${selectedKey}" from this bucket. This action cannot be undone.`}
-				confirmLabel="Delete Object"
+				title={
+					selectedKeys.length === 1
+						? "Delete Object"
+						: "Delete Objects"
+				}
+				description={
+					selectedKeys.length === 1
+						? `This permanently deletes "${selectedKeys[0]}" from this bucket. This action cannot be undone.`
+						: `This permanently deletes ${selectedKeys.length} objects from this bucket. This action cannot be undone.`
+				}
+				confirmLabel={
+					selectedKeys.length === 1
+						? "Delete Object"
+						: "Delete Objects"
+				}
 				pendingLabel="Deleting..."
 				confirmVariant="danger"
 				isConfirming={isDeleting}
@@ -296,7 +312,7 @@ export const ListObjects = () => {
 					bucketName={bucketName}
 					objectKey={previewKey}
 					onClose={hidePreviewModal}
-					onDownload={() => handleDownloadObject(previewKey)}
+					onDownload={() => handleDownloadObject([previewKey])}
 				/>
 			)}
 		</div>

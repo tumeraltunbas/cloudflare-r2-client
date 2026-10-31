@@ -15,12 +15,13 @@ import {
     CreateBucketReqDto,
     DeleteObjectsBodyReqDto,
     DeleteObjectsParamsReqDto,
-    GetObjectReqDto,
+    GetObjectsBodyReqDto,
+    GetObjectsParamsReqDto,
     ListObjectsReqDto,
     RemoveBucketReqDto,
     UploadObjectReqDto,
 } from '../models/dtos/project/req/cloudflare';
-import { CONTENT_TYPES } from '../constants/enums';
+import { CONTENT_TYPES, HTTP_HEADERS } from '../constants/enums';
 
 export const CloudflareRoutes: FastifyPluginAsync = async (
     fastify: FastifyInstance,
@@ -48,7 +49,7 @@ export const CloudflareRoutes: FastifyPluginAsync = async (
             schema: APP_ROUTES.cloudflare.deleteBucket.requestDtoSchema,
         },
         async (
-            request: FastifyRequest<{ Params: RemoveBucketReqDto }>,
+            request: FastifyRequest<{ Body: RemoveBucketReqDto }>,
         ): Promise<void> => cloudflareController.deleteBucket(request),
     );
 
@@ -86,18 +87,22 @@ export const CloudflareRoutes: FastifyPluginAsync = async (
         ): Promise<void> => cloudflareController.uploadObject(request),
     );
 
-    fastify.get(
+    fastify.post(
         APP_ROUTES.cloudflare.getObject.endpoint,
         {
             schema: APP_ROUTES.cloudflare.getObject.requestDtoSchema,
         },
         async (
-            request: FastifyRequest<{ Params: GetObjectReqDto }>,
+            request: FastifyRequest<{
+                Params: GetObjectsParamsReqDto;
+                Body: GetObjectsBodyReqDto;
+            }>,
             reply: FastifyReply,
         ): Promise<void> => {
             const response = await cloudflareController.getObject(request);
             return reply
-                .type(CONTENT_TYPES.APPLICATION_OCTET_STREAM)
+                .type(CONTENT_TYPES.APPLICATION_ZIP)
+                .header(HTTP_HEADERS.CONTENT_DISPOSITION, 'attachment; filename="objects.zip"')
                 .send(response.body);
         },
     );
