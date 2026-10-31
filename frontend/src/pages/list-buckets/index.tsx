@@ -30,7 +30,9 @@ const columns: Column<DataType>[] = [
 		dataIndex: "creationDate",
 		key: "creationDate",
 		render: (record) => (
-			<span className="text-ink-500">{formatDate(record.creationDate)}</span>
+			<span className="text-ink-500">
+				{formatDate(record.creationDate)}
+			</span>
 		),
 	},
 ];
@@ -66,8 +68,12 @@ export const ListBuckets = () => {
 		setNewBucketName(e.target.value);
 	};
 
-	const showDeleteBucketButton = () => {
-		setDeleteBucketButtonVisible(true);
+	const handleSelectBucket = (selectedKey: React.Key) => {
+		if (selectedKey) {
+			setDeleteBucketButtonVisible(true);
+		} else {
+			setDeleteBucketButtonVisible(false);
+		}
 	};
 
 	const { buckets } = useLoaderData();
@@ -84,8 +90,9 @@ export const ListBuckets = () => {
 						R2 Buckets
 					</h1>
 					<p className="mt-1 text-sm text-ink-500">
-						{buckets.length} {buckets.length === 1 ? "bucket" : "buckets"} in
-						this account.
+						{buckets.length}{" "}
+						{buckets.length === 1 ? "bucket" : "buckets"} in this
+						account.
 					</p>
 				</div>
 
@@ -110,7 +117,8 @@ export const ListBuckets = () => {
 				dataSource={buckets}
 				rowKey="name"
 				selection={{
-					onSelect: () => showDeleteBucketButton(),
+					onSelect: (selectedKey: React.Key) =>
+						handleSelectBucket(selectedKey),
 				}}
 				emptyState="No buckets yet. Create one to get started."
 			/>
