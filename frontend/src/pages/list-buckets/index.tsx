@@ -25,6 +25,7 @@ const columns: Column<DataType>[] = [
 		render: (record) => (
 			<Link
 				to={`/buckets/${record.name}/objects`}
+				onClick={(event) => event.stopPropagation()}
 				className="font-medium text-cloudflare-orange-text underline-offset-4 hover:underline"
 			>
 				{record.name}
