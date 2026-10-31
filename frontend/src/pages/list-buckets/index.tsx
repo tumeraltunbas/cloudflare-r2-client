@@ -44,8 +44,9 @@ export const ListBuckets = () => {
 	const [isCreateBucketModalOpen, setIsCreateBucketModalOpen] =
 		React.useState<boolean>(false);
 	const [newBucketName, setNewBucketName] = React.useState<string>();
-	const [isDeleteBucketButtonVisible, setDeleteBucketButtonVisible] =
-		React.useState<boolean>(false);
+	const [selectedBucketName, setSelectedBucketName] = React.useState<
+		string | null
+	>();
 
 	const showCreateBucketModal = () => {
 		setIsCreateBucketModalOpen(true);
@@ -69,11 +70,12 @@ export const ListBuckets = () => {
 	};
 
 	const handleSelectBucket = (selectedKey: React.Key) => {
-		if (selectedKey) {
-			setDeleteBucketButtonVisible(true);
-		} else {
-			setDeleteBucketButtonVisible(false);
+		if (!selectedKey) {
+			setSelectedBucketName(null);
+			return;
 		}
+
+		setSelectedBucketName(selectedKey as string);
 	};
 
 	const { buckets } = useLoaderData();
@@ -97,7 +99,7 @@ export const ListBuckets = () => {
 				</div>
 
 				<div className="flex items-center gap-2">
-					{isDeleteBucketButtonVisible && (
+					{selectedBucketName && (
 						<Button variant="danger" onClick={() => undefined}>
 							Delete Bucket
 						</Button>
