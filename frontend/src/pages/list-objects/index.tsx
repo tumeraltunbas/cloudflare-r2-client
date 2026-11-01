@@ -204,12 +204,26 @@ export const ListObjects = () => {
 
 	return (
 		<div className="space-y-6">
-			<nav className="flex items-center gap-1.5 text-sm text-ink-500">
+			<nav className="flex items-center gap-3 text-sm text-ink-500">
 				<Link
 					to="/buckets"
-					className="rounded transition-colors duration-150 hover:text-cloudflare-orange-text"
+					aria-label="Back to buckets"
+					className="inline-flex items-center rounded-md p-1 transition-colors duration-150 hover:bg-surface-overlay hover:text-cloudflare-orange-text"
 				>
-					Buckets
+					<svg
+						aria-hidden="true"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						className="h-5 w-5"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							d="M15.75 19.5 8.25 12l7.5-7.5"
+						/>
+					</svg>
 				</Link>
 				<span className="text-ink-300" aria-hidden="true">
 					/
