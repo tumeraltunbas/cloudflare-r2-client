@@ -17,6 +17,8 @@ export default (): Configuration => ({
         maxFileSize: convertMegabytesToBytes(300),
         maxFileCount: 1,
         fieldName: 'file',
+        defaultMimeType: 'application/octet-stream',
+        defaultZipFileName: 'archive.zip',
     },
     baseUrl: {
         clientBaseUrl: process.env.CLIENT_BASE_URL,
@@ -45,6 +47,8 @@ export interface FormDataConfig {
     maxFileSize: number;
     maxFileCount: number;
     fieldName: string;
+    defaultMimeType: string;
+    defaultZipFileName: string;
 }
 
 export interface BaseUrlConfig {

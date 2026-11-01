@@ -69,6 +69,6 @@ export class DeleteObjectResponse {
 }
 
 export class GetObjectResponse {
-    responseBody: unknown;
+    responseBody: Buffer;
     contentType: CONTENT_TYPES;
 }

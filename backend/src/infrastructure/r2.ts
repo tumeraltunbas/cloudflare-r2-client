@@ -1,5 +1,10 @@
 import configuration from '../configuration/configuration';
-import { CONTENT_TYPES, HTTP_HEADERS, HTTP_METHODS } from '../constants/enums';
+import {
+    CONTENT_TYPES,
+    HTTP_HEADERS,
+    HTTP_METHODS,
+    RESPONSE_TYPES,
+} from '../constants/enums';
 import { buildCloudflareRequestUrl, generateBearerToken } from '../utils/str';
 
 interface CloudflareFetchOptions extends RequestInit {
@@ -11,8 +16,8 @@ export class R2Client {
         endpoint: string,
         method: HTTP_METHODS,
         body?: unknown,
-        contentType?: CONTENT_TYPES,
-        responseType: 'json' | 'response' = 'json',
+        contentType: string = CONTENT_TYPES.APPLICATION_JSON,
+        responseType: RESPONSE_TYPES = RESPONSE_TYPES.JSON,
     ): Promise<T> {
         const { apiUrl, apiVersion, apiToken } = configuration().cloudflare;
 
@@ -20,19 +25,19 @@ export class R2Client {
             method,
             headers: {
                 [HTTP_HEADERS.AUTHORIZATION]: generateBearerToken(apiToken),
-                [HTTP_HEADERS.CONTENT_TYPE]:
-                    contentType ?? CONTENT_TYPES.APPLICATION_JSON,
+                [HTTP_HEADERS.CONTENT_TYPE]: contentType,
             },
         };
 
-        const httpMethodsWithoutBody = [HTTP_METHODS.GET, HTTP_METHODS.DELETE];
-
-        if (body !== undefined && !httpMethodsWithoutBody.includes(method)) {
-            if (contentType === CONTENT_TYPES.APPLICATION_JSON) {
-                fetchOptions.body = JSON.stringify(body);
-            } else if (contentType === CONTENT_TYPES.APPLICATION_OCTET_STREAM) {
-                fetchOptions.body = body as ReadableStream;
-                fetchOptions.duplex = 'half';
+        if (method !== HTTP_METHODS.GET && method !== HTTP_METHODS.DELETE) {
+            switch (contentType) {
+                case CONTENT_TYPES.APPLICATION_JSON:
+                    fetchOptions.body = JSON.stringify(body);
+                    break;
+                default:
+                    fetchOptions.body = body as ReadableStream;
+                    fetchOptions.duplex = 'half';
+                    break;
             }
         }
 
@@ -40,7 +45,7 @@ export class R2Client {
 
         const response = await fetch(url, fetchOptions);
 
-        if (responseType === 'response') {
+        if (responseType === RESPONSE_TYPES.RAW) {
             return response as T;
         }
 

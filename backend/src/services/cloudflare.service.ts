@@ -88,11 +88,13 @@ export class CloudflareService {
         return createBucketResDto;
     }
 
-    async deleteBucket(
+    async deleteBuckets(
         request: FastifyRequest<{ Body: RemoveBucketReqDto }>,
     ): Promise<void> {
+        const bucketNames: string[] = request.body.names;
+
         try {
-            await this.cloudflareRequestClient.deleteBucket(request.body.names);
+            await this.cloudflareRequestClient.deleteBuckets(bucketNames);
         } catch (error) {
             request.log.error(
                 { error },
@@ -180,12 +182,16 @@ export class CloudflareService {
         }
 
         const trimmedObjectKey: string = file.filename.trim();
+        const mimeType: string = file.mimetype
+            ? file.mimetype
+            : formDataConfig.defaultMimeType;
 
         try {
             await this.cloudflareRequestClient.uploadObject(
                 params.name,
                 trimmedObjectKey,
                 file.file,
+                mimeType,
             );
         } catch (error) {
             request.log.error(
@@ -205,12 +211,13 @@ export class CloudflareService {
         }>,
     ): Promise<GetObjectResDto> {
         const { params, body } = request;
+        const keys: string[] = body.keys.map((key) => key.trim());
 
         let getObjectResponses: GetObjectResponse[] = null;
 
         try {
             getObjectResponses = await Promise.all(
-                body.keys.map((key) =>
+                keys.map((key) =>
                     this.cloudflareRequestClient.getObject(params.name, key),
                 ),
             );
@@ -222,15 +229,41 @@ export class CloudflareService {
             throw new ProcessFailureError();
         }
 
-        const zip = new JSZip();
+        if (getObjectResponses.length > 1) {
+            const zip = new JSZip();
 
-        body.keys.forEach((key, index) => {
-            zip.file(key, getObjectResponses[index].responseBody as Buffer);
-        });
+            keys.forEach((key, index) => {
+                zip.file(key, getObjectResponses[index].responseBody);
+            });
+
+            let generatedZip = null;
+
+            try {
+                generatedZip = await zip.generateAsync({ type: 'nodebuffer' });
+            } catch (error) {
+                request.log.error(
+                    { error },
+                    'Cloudflare service - getObject - generateAsync',
+                );
+                throw new ProcessFailureError();
+            }
+
+            const getObjectResDto: GetObjectResDto = {
+                body: generatedZip,
+                contentType: CONTENT_TYPES.APPLICATION_ZIP,
+                fileName: configuration().formData.defaultZipFileName,
+            };
+
+            return getObjectResDto;
+        }
+
+        const object = getObjectResponses[0];
+        const key = keys[0];
 
         const getObjectResDto: GetObjectResDto = {
-            body: await zip.generateAsync({ type: 'nodebuffer' }),
-            contentType: CONTENT_TYPES.APPLICATION_ZIP,
+            body: object.responseBody,
+            contentType: object.contentType,
+            fileName: key,
         };
 
         return getObjectResDto;

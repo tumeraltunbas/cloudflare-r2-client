@@ -23,8 +23,8 @@ export const APP_ROUTES = {
                 },
             },
         },
-        deleteBucket: {
-            endpoint: '/buckets',
+        deleteBuckets: {
+            endpoint: '/buckets/remove',
             requestDtoSchema: {
                 body: {
                     type: JAVASCRIPT_DATA_TYPES.OBJECT,

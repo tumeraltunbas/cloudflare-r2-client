@@ -15,16 +15,8 @@ export enum HTTP_HEADERS {
 
 export enum CONTENT_TYPES {
     APPLICATION_JSON = 'application/json',
-    APPLICATION_OCTET_STREAM = 'application/octet-stream',
-    APPLICATION_PDF = 'application/pdf',
     APPLICATION_ZIP = 'application/zip',
-    IMAGE_JPEG = 'image/jpeg',
-    IMAGE_JPG = 'image/jpeg',
-    IMAGE_PNG = 'image/png',
-    IMAGE_GIF = 'image/gif',
-    IMAGE_WEBP = 'image/webp',
-    IMAGE_SVG = 'image/svg+xml',
-    TEXT_PLAIN = 'text/plain',
+    APPLICATION_OCTET_STREAM = 'application/octet-stream',
 }
 
 export enum HTTP_STATUS_CODES {
@@ -40,4 +32,9 @@ export enum JAVASCRIPT_DATA_TYPES {
     BOOLEAN = 'boolean',
     OBJECT = 'object',
     ARRAY = 'array',
+}
+
+export enum RESPONSE_TYPES {
+    RAW = 'raw',
+    JSON = 'json',
 }

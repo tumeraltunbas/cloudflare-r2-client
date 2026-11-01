@@ -34,10 +34,10 @@ export class CloudflareController {
         return this.cloudflareService.createBucket(request);
     }
 
-    async deleteBucket(
+    async deleteBuckets(
         request: FastifyRequest<{ Body: RemoveBucketReqDto }>,
     ): Promise<void> {
-        return this.cloudflareService.deleteBucket(request);
+        return this.cloudflareService.deleteBuckets(request);
     }
 
     async listObjects(

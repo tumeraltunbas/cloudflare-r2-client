@@ -1,5 +1,3 @@
-import { CONTENT_TYPES } from '../../../../constants/enums';
-
 export class ListBucketsResDto {
     buckets: {
         name: string;
@@ -21,5 +19,6 @@ export class ListObjectsResDto {
 
 export class GetObjectResDto {
     body: unknown;
-    contentType: CONTENT_TYPES;
+    contentType: string;
+    fileName?: string;
 }
