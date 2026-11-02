@@ -3,13 +3,49 @@
 	"private": true,
 	"version": "0.0.0",
 	"type": "module",
-	"main": "electron/main.ts",
+	"main": "electron/main.js",
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc -b && vite build",
 		"lint": "eslint .",
 		"preview": "vite preview",
-		"electron:dev": "concurrently -k \"vite\" \"wait-on http://localhost:5173 && electron .\""
+		"electron:dev": "concurrently -k \"vite\" \"wait-on http://localhost:4173 && electron .\"",
+		"dist:mac": "vite build && electron-builder --mac",
+		"dist:win": "vite build && electron-builder --win"
+	},
+	"build": {
+		"appId": "com.tumeraltunbas.cloudflareR2client",
+		"productName": "Cloudflare R2 Client",
+		"directories": {
+			"output": "release"
+		},
+		"files": [
+			"dist/**/*",
+			"electron/**/*",
+			"package.json"
+		],
+		"extraResources": [
+			{
+				"from": "../backend/dist",
+				"to": "backend/dist"
+			},
+			{
+				"from": "../backend/node_modules",
+				"to": "backend/node_modules"
+			},
+			{
+				"from": "../backend/package.json",
+				"to": "backend/package.json"
+			}
+		],
+		"mac": {
+			"icon": "build/cloudflare.icns",
+			"target": "dmg"
+		},
+		"win": {
+			"icon": "build/cloudflare.ico",
+			"target": "nsis"
+		}
 	},
 	"dependencies": {
 		"@ant-design/icons": "^6.3.2",

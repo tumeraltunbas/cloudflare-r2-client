@@ -10,7 +10,7 @@ export function Layout() {
 				<div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-6 px-6">
 					<div className="flex items-center gap-2.5">
 						<img
-							src="/cloudflare.webp"
+							src={`${import.meta.env.BASE_URL}cloudflare.webp`}
 							alt=""
 							className="h-7 w-7 rounded-md object-contain"
 						/>
