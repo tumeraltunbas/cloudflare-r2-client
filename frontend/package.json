@@ -38,6 +38,9 @@
 				"to": "backend/package.json"
 			}
 		],
+		"toolsets": {
+			"nsis": "1.2.1"
+		},
 		"mac": {
 			"icon": "build/cloudflare.icns",
 			"target": "dmg"
