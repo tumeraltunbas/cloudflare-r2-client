@@ -38,9 +38,9 @@ export const useDeleteBucket = () => {
 	return useMutation({
 		mutationFn: async ({ bucketNames }: DeleteBucketsParams) => {
 			const response = await fetcher(
-				"/cloudflare/buckets",
+				"/cloudflare/buckets/remove",
 				{
-					method: "DELETE",
+					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ names: bucketNames }),
 				}
